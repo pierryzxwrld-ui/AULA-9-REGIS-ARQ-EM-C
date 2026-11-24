@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    int id;
+    char cargo[30];
+    float salario;
+} Funcionario;
+
+int main() {
+    Funcionario *func = (Funcionario *) malloc(sizeof(Funcionario));
+    Funcionario *backup = (Funcionario *) malloc(sizeof(Funcionario));
+    FILE *fp;
+
+    if (func == NULL || backup == NULL) {
+        printf("erro ao alocar memoria\n");
+        return 1;
+    }
+
+    printf("digite o id do funcionario :");
+    scanf("%d", &func->id);
+    printf("digite o cargo do funcionario :");
+    scanf(" %[^\n]", func->cargo);
+    printf("digite o salario do funcionario :");
+    scanf("%f", &func->salario);
+
+    memcpy(backup, func, sizeof(Funcionario));
+
+    fp = fopen("backup_rh.bin", "wb");
+    if (fp == NULL) {
+        printf("erro ao abrir backup_rh.bin\n");
+        free(func);
+        free(backup);
+        return 1;
+    }
+
+    fwrite(backup, sizeof(Funcionario), 1, fp);
+    fclose(fp);
+
+    free(func);
+    free(backup);
+    func = NULL;
+    backup = NULL;
+}
