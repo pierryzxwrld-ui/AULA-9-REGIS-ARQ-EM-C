@@ -1,0 +1,86 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    int registro;
+    int horas_aula;
+} Professor;
+
+Professor* lerProfessoresDoArquivo(int *qtdLida) {
+    FILE *fp = fopen("folha.dat", "rb");
+    long tamanhoBytes;
+    int qtd;
+    Professor *listaLida;
+
+    if (fp == NULL) {
+        *qtdLida = 0;
+        return NULL;
+    }
+
+    fseek(fp, 0, SEEK_END);
+    tamanhoBytes = ftell(fp);
+    rewind(fp);
+
+    qtd = (int) (tamanhoBytes / sizeof(Professor));
+    listaLida = (Professor *) malloc(qtd * sizeof(Professor));
+    if (listaLida == NULL) {
+        fclose(fp);
+        *qtdLida = 0;
+        return NULL;
+    }
+
+    fread(listaLida, sizeof(Professor), qtd, fp);
+    fclose(fp);
+    *qtdLida = qtd;
+    return listaLida;
+}
+
+int main() {
+    int n, cont, qtdLida = 0;
+    Professor *prof;
+    unsigned char *buffer;
+    Professor *lidos;
+    FILE *fp;
+
+    printf("quantos professores deseja cadastrar :");
+    scanf("%d", &n);
+
+    prof = (Professor *) malloc(n * sizeof(Professor));
+    buffer = (unsigned char *) malloc(n * sizeof(Professor));
+
+    if (prof == NULL || buffer == NULL) {
+        printf("erro ao alocar memoria\n");
+        return 1;
+    }
+
+    for (cont=0 ; cont<n ; cont++) {
+        printf("digite o registro do professor %d :", cont+1);
+        scanf("%d", &prof[cont].registro);
+        printf("digite as horas_aula do professor %d :", cont+1);
+        scanf("%d", &prof[cont].horas_aula);
+    }
+
+    memcpy(buffer, prof, n * sizeof(Professor));
+
+    fp = fopen("folha.dat", "wb");
+    if (fp == NULL) {
+        printf("erro ao criar folha.dat\n");
+        free(prof);
+        free(buffer);
+        return 1;
+    }
+
+    fwrite(buffer, n * sizeof(Professor), 1, fp);
+    fclose(fp);
+
+    lidos = lerProfessoresDoArquivo(&qtdLida);
+    printf("\nprofessores lidos de folha.dat:\n");
+    for (cont=0 ; cont<qtdLida ; cont++) {
+        printf("Registro: %d | Horas aula: %d\n", lidos[cont].registro, lidos[cont].horas_aula);
+    }
+
+    free(prof);
+    free(buffer);
+    free(lidos);
+}
