@@ -1,0 +1,96 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct {
+    char titulo[12];
+    int zona;
+} Eleitor;
+
+typedef struct {
+    Eleitor eleitor;
+    int numero_voto;
+} Cedula;
+
+Cedula* adicionarVoto(Cedula *votos, int *qtd) {
+    Cedula *novo = (Cedula *) realloc(votos, (*qtd + 1) * sizeof(Cedula));
+    if (novo == NULL) {
+        printf("erro ao realocar memoria\n");
+        return votos;
+    }
+    votos = novo;
+
+    printf("digite o titulo do eleitor :");
+    scanf(" %11s", votos[*qtd].eleitor.titulo);
+    printf("digite a zona eleitoral :");
+    scanf("%d", &votos[*qtd].eleitor.zona);
+    printf("digite o numero do voto :");
+    scanf("%d", &votos[*qtd].numero_voto);
+
+    (*qtd)++;
+    return votos;
+}
+
+Cedula* recuperarVotos(int *totalRecuperado) {
+    FILE *fp = fopen("urnas.bin", "rb");
+    long tamanhoTotal;
+    int qtd;
+    Cedula *bloco;
+
+    if (fp == NULL) {
+        *totalRecuperado = 0;
+        return NULL;
+    }
+
+    fseek(fp, 0, SEEK_END);
+    tamanhoTotal = ftell(fp);
+    rewind(fp);
+
+    qtd = (int) (tamanhoTotal / sizeof(Cedula));
+    bloco = (Cedula *) malloc(tamanhoTotal);
+    if (bloco == NULL) {
+        fclose(fp);
+        *totalRecuperado = 0;
+        return NULL;
+    }
+
+    fread(bloco, sizeof(Cedula), qtd, fp);
+    fclose(fp);
+    *totalRecuperado = qtd;
+    return bloco;
+}
+
+int main() {
+    Cedula *votos = NULL;
+    Cedula *recuperados;
+    int qtd = 0, totalRec = 0, cont, op = 1;
+    FILE *fp;
+
+    while (op == 1) {
+        votos = adicionarVoto(votos, &qtd);
+        printf("deseja adicionar outro voto? (1-sim 0-nao) :");
+        scanf("%d", &op);
+    }
+
+    fp = fopen("urnas.bin", "wb");
+    if (fp == NULL) {
+        printf("erro ao salvar urnas.bin\n");
+        free(votos);
+        return 1;
+    }
+    if (qtd > 0) {
+        fwrite(votos, sizeof(Cedula), qtd, fp);
+    }
+    fclose(fp);
+
+    recuperados = recuperarVotos(&totalRec);
+    printf("\nvotos recuperados de urnas.bin:\n");
+    for (cont=0 ; cont<totalRec ; cont++) {
+        printf("Titulo: %s | Zona: %d | Voto: %d\n",
+               recuperados[cont].eleitor.titulo,
+               recuperados[cont].eleitor.zona,
+               recuperados[cont].numero_voto);
+    }
+
+    free(votos);
+    free(recuperados);
+}
