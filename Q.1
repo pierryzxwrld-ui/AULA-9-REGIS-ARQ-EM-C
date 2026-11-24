@@ -1,0 +1,48 @@
+#include <stdio.h>
+
+typedef struct {
+    int codigo;
+    char nome[50];
+    float preco;
+} Produto;
+
+int main() {
+    Produto prod[3];
+    FILE *fp;
+    int cont;
+    int codigo;
+    char nome[50];
+    float preco;
+
+    for (cont=0 ; cont<3 ; cont++) {
+        printf("digite o codigo do produto %d :", cont+1);
+        scanf("%d", &prod[cont].codigo);
+        printf("digite o nome do produto %d :", cont+1);
+        scanf(" %[^\n]", prod[cont].nome);
+        printf("digite o preco do produto %d :", cont+1);
+        scanf("%f", &prod[cont].preco);
+    }
+
+    fp = fopen("estoque.txt", "w");
+    if (fp == NULL) {
+        printf("erro ao abrir estoque.txt\n");
+        return 1;
+    }
+
+    for (cont=0 ; cont<3 ; cont++) {
+        fprintf(fp, "%d;%s;%.2f\n", prod[cont].codigo, prod[cont].nome, prod[cont].preco);
+    }
+    fclose(fp);
+
+    fp = fopen("estoque.txt", "r");
+    if (fp == NULL) {
+        printf("erro ao abrir estoque.txt para leitura\n");
+        return 1;
+    }
+
+    printf("\n========== ESTOQUE ==========\n");
+    while (fscanf(fp, "%d;%49[^;];%f\n", &codigo, nome, &preco) == 3) {
+        printf("Codigo: %d | Nome: %s | Preco: %.2f\n", codigo, nome, preco);
+    }
+    fclose(fp);
+}
